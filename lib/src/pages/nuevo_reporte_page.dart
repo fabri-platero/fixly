@@ -1,3 +1,4 @@
+import 'package:fixly/src/provider/reportes_provider.dart';
 import 'package:flutter/material.dart';
 
 class NuevoReportePage extends StatefulWidget {
@@ -196,6 +197,13 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
       _mostrarAlerta('Completá el título y la dirección.');
       return;
     }
+    reportesProvider.agregar({
+      'categoria': _categoria.toLowerCase(),
+      'titulo': _titulo,
+      'descripcion': _descripcion,
+      'direccion': _direccion,
+      'estado': 'pendiente',
+    });
     Navigator.pop(context);
   }
 

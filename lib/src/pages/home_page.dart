@@ -39,7 +39,9 @@ class HomePage extends StatelessWidget {
       ),
       body: _crearLista(),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.pushNamed(context, 'nuevo');
+        },
         icon: const Icon(Icons.add),
         label: const Text('Nuevo reporte'),
       ),

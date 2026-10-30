@@ -1,0 +1,28 @@
+{
+    "reportes" : [
+        {
+            "categoria" : "bache",
+            "titulo" : "Bache profundo en la calzada",
+            "direccion" : "Av. Libertador 1200",
+            "estado" : "pendiente"
+        },
+        {
+            "categoria" : "luminaria",
+            "titulo" : "Farola apagada hace una semana",
+            "direccion" : "Calle Mitre 450",
+            "estado" : "en proceso"
+        },
+        {
+            "categoria" : "basura",
+            "titulo" : "Basura acumulada en la esquina",
+            "direccion" : "Av. Rawson 800",
+            "estado" : "resuelto"
+        },
+        {
+            "categoria" : "bache",
+            "titulo" : "Pozo frente a la escuela",
+            "direccion" : "Calle Sarmiento 95",
+            "estado" : "pendiente"
+        }
+    ]
+}

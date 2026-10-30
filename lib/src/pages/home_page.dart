@@ -1,35 +1,14 @@
+import 'package:fixly/src/provider/reportes_provider.dart';
 import 'package:flutter/material.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
-  final List<Map<String, String>> _reportes = const [
-    {
-      'categoria': 'bache',
-      'titulo': 'Bache profundo en la calzada',
-      'direccion': 'Av. Libertador 1200',
-      'estado': 'pendiente',
-    },
-    {
-      'categoria': 'luminaria',
-      'titulo': 'Farola apagada hace una semana',
-      'direccion': 'Calle Mitre 450',
-      'estado': 'en proceso',
-    },
-    {
-      'categoria': 'basura',
-      'titulo': 'Basura acumulada en la esquina',
-      'direccion': 'Av. Rawson 800',
-      'estado': 'resuelto',
-    },
-    {
-      'categoria': 'bache',
-      'titulo': 'Pozo frente a la escuela',
-      'direccion': 'Calle Sarmiento 95',
-      'estado': 'pendiente',
-    },
-  ];
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
 
+class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,7 +19,9 @@ class HomePage extends StatelessWidget {
       body: _crearLista(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.pushNamed(context, 'nuevo');
+          Navigator.pushNamed(context, 'nuevo').then((_) {
+            setState(() {});
+          });
         },
         icon: const Icon(Icons.add),
         label: const Text('Nuevo reporte'),
@@ -49,13 +30,26 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _crearLista() {
-    return ListView(
-      padding: const EdgeInsets.all(10.0),
-      children: _reportes.map((reporte) => _crearTarjeta(reporte)).toList(),
+    return FutureBuilder(
+      future: reportesProvider.cargarDatos(),
+      builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          return const Center(child: Text('Error al cargar los reportes'));
+        }
+        return ListView(
+          padding: const EdgeInsets.all(10.0),
+          children: snapshot.data!
+              .map((reporte) => _crearTarjeta(reporte))
+              .toList(),
+        );
+      },
     );
   }
 
-  Widget _crearTarjeta(Map<String, String> reporte) {
+  Widget _crearTarjeta(dynamic reporte) {
     return Card(
       elevation: 4.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),

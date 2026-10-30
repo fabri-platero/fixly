@@ -1,3 +1,4 @@
+import 'package:fixly/src/routes/routes.dart';
 import 'package:flutter/material.dart';
 
 class MyApp extends StatelessWidget {
@@ -5,8 +6,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Fixly',
+      initialRoute: '/',
+      routes: getAplicationRoutes(),
     );
   }
 }

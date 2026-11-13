@@ -1,3 +1,4 @@
+import 'package:fixly/src/provider/auth_provider.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -33,6 +34,8 @@ class _LoginPageState extends State<LoginPage> {
                   _crearPassword(),
                   const SizedBox(height: 30),
                   _crearBotonIngresar(),
+                  const SizedBox(height: 10),
+                  _crearBotonRegistro(),
                 ],
               ),
             ),
@@ -111,20 +114,35 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _ingresar() {
+  Widget _crearBotonRegistro() {
+    return TextButton(
+      onPressed: () {
+        Navigator.pushNamed(context, 'registro');
+      },
+      child: const Text('¿No tenés cuenta? Crear cuenta'),
+    );
+  }
+
+  Future<void> _ingresar() async {
     if (_email.isEmpty || _password.isEmpty) {
-      _mostrarAlerta('Completá el email y la contraseña.');
+      _mostrarAlerta('Faltan datos', 'Completá el email y la contraseña.');
+      return;
+    }
+    final error = await authProvider.ingresar(_email.trim(), _password);
+    if (!mounted) return;
+    if (error != null) {
+      _mostrarAlerta('Error', error);
       return;
     }
     Navigator.pushReplacementNamed(context, 'home');
   }
 
-  void _mostrarAlerta(String mensaje) {
+  void _mostrarAlerta(String titulo, String mensaje) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Faltan datos'),
+          title: Text(titulo),
           content: Text(mensaje),
           actions: <Widget>[
             TextButton(

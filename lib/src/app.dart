@@ -1,3 +1,4 @@
+import 'package:fixly/src/provider/auth_provider.dart';
 import 'package:fixly/src/routes/routes.dart';
 import 'package:flutter/material.dart';
 
@@ -9,7 +10,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Fixly',
-      initialRoute: '/',
+      initialRoute: authProvider.usuario == null ? '/' : 'home',
       routes: getAplicationRoutes(),
     );
   }

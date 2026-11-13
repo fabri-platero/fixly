@@ -1,3 +1,4 @@
+import 'package:fixly/src/provider/auth_provider.dart';
 import 'package:fixly/src/provider/reportes_provider.dart';
 import 'package:flutter/material.dart';
 
@@ -15,6 +16,13 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Fixly'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Cerrar sesión',
+            onPressed: _salir,
+          ),
+        ],
       ),
       body: _crearLista(),
       floatingActionButton: FloatingActionButton.extended(
@@ -27,6 +35,12 @@ class _HomePageState extends State<HomePage> {
         label: const Text('Nuevo reporte'),
       ),
     );
+  }
+
+  Future<void> _salir() async {
+    await authProvider.salir();
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
   }
 
   Widget _crearLista() {

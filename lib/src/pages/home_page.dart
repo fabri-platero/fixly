@@ -1,3 +1,4 @@
+import 'package:fixly/src/models/reporte_model.dart';
 import 'package:fixly/src/provider/auth_provider.dart';
 import 'package:fixly/src/provider/reportes_provider.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late Future<List<Reporte>> _reportes;
+
+  @override
+  void initState() {
+    super.initState();
+    _reportes = reportesProvider.cargarDatos();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,7 +37,9 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.pushNamed(context, 'nuevo').then((_) {
-            setState(() {});
+            setState(() {
+              _reportes = reportesProvider.cargarDatos();
+            });
           });
         },
         icon: const Icon(Icons.add),
@@ -45,13 +56,16 @@ class _HomePageState extends State<HomePage> {
 
   Widget _crearLista() {
     return FutureBuilder(
-      future: reportesProvider.cargarDatos(),
-      builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
+      future: _reportes,
+      builder: (BuildContext context, AsyncSnapshot<List<Reporte>> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError || !snapshot.hasData) {
           return const Center(child: Text('Error al cargar los reportes'));
+        }
+        if (snapshot.data!.isEmpty) {
+          return const Center(child: Text('Todavía no hay reportes'));
         }
         return ListView(
           padding: const EdgeInsets.all(10.0),
@@ -63,7 +77,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _crearTarjeta(dynamic reporte) {
+  Widget _crearTarjeta(Reporte reporte) {
     return Card(
       elevation: 4.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
@@ -71,11 +85,11 @@ class _HomePageState extends State<HomePage> {
         contentPadding: const EdgeInsets.all(12.0),
         leading: CircleAvatar(
           backgroundColor: Colors.blue.shade50,
-          child: Icon(_iconoCategoria(reporte['categoria']!), color: Colors.blue),
+          child: Icon(_iconoCategoria(reporte.categoria), color: Colors.blue),
         ),
-        title: Text(reporte['titulo']!),
-        subtitle: Text(reporte['direccion']!),
-        trailing: _crearEstado(reporte['estado']!),
+        title: Text(reporte.titulo),
+        subtitle: Text(reporte.direccion),
+        trailing: _crearEstado(reporte.estado),
         onTap: () {},
       ),
     );

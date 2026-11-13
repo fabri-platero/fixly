@@ -1,3 +1,5 @@
+import 'package:fixly/src/models/reporte_model.dart';
+import 'package:fixly/src/provider/auth_provider.dart';
 import 'package:fixly/src/provider/reportes_provider.dart';
 import 'package:flutter/material.dart';
 
@@ -192,27 +194,33 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
     );
   }
 
-  void _enviar() {
-    if (_titulo.isEmpty || _direccion.isEmpty) {
-      _mostrarAlerta('Completá el título y la dirección.');
+  Future<void> _enviar() async {
+    if (_titulo.trim().isEmpty || _direccion.trim().isEmpty) {
+      _mostrarAlerta('Faltan datos', 'Completá el título y la dirección.');
       return;
     }
-    reportesProvider.agregar({
-      'categoria': _categoria.toLowerCase(),
-      'titulo': _titulo,
-      'descripcion': _descripcion,
-      'direccion': _direccion,
-      'estado': 'pendiente',
-    });
+    final reporte = Reporte(
+      categoria: _categoria.toLowerCase(),
+      titulo: _titulo.trim(),
+      descripcion: _descripcion.trim(),
+      direccion: _direccion.trim(),
+      uid: authProvider.usuario!.uid,
+    );
+    final error = await reportesProvider.agregar(reporte);
+    if (!mounted) return;
+    if (error != null) {
+      _mostrarAlerta('Error', error);
+      return;
+    }
     Navigator.pop(context);
   }
 
-  void _mostrarAlerta(String mensaje) {
+  void _mostrarAlerta(String titulo, String mensaje) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Faltan datos'),
+          title: Text(titulo),
           content: Text(mensaje),
           actions: <Widget>[
             TextButton(

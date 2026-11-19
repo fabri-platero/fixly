@@ -1,6 +1,7 @@
 import 'package:fixly/src/models/reporte_model.dart';
 import 'package:fixly/src/provider/auth_provider.dart';
 import 'package:fixly/src/provider/reportes_provider.dart';
+import 'package:fixly/src/utils/reporte_util.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -85,12 +86,18 @@ class _HomePageState extends State<HomePage> {
         contentPadding: const EdgeInsets.all(12.0),
         leading: CircleAvatar(
           backgroundColor: Colors.blue.shade50,
-          child: Icon(_iconoCategoria(reporte.categoria), color: Colors.blue),
+          child: Icon(iconoCategoria(reporte.categoria), color: Colors.blue),
         ),
         title: Text(reporte.titulo),
         subtitle: Text(reporte.direccion),
         trailing: _crearEstado(reporte.estado),
-        onTap: () {},
+        onTap: () {
+          Navigator.pushNamed(context, 'detalle', arguments: reporte).then((_) {
+            setState(() {
+              _reportes = reportesProvider.cargarDatos();
+            });
+          });
+        },
       ),
     );
   }
@@ -98,33 +105,7 @@ class _HomePageState extends State<HomePage> {
   Widget _crearEstado(String estado) {
     return Chip(
       label: Text(estado),
-      backgroundColor: _colorEstado(estado),
+      backgroundColor: colorEstado(estado),
     );
-  }
-
-  IconData _iconoCategoria(String categoria) {
-    switch (categoria) {
-      case 'bache':
-        return Icons.warning_amber;
-      case 'luminaria':
-        return Icons.lightbulb_outline;
-      case 'basura':
-        return Icons.delete_outline;
-      default:
-        return Icons.report_problem;
-    }
-  }
-
-  Color _colorEstado(String estado) {
-    switch (estado) {
-      case 'pendiente':
-        return Colors.orange.shade100;
-      case 'en proceso':
-        return Colors.blue.shade100;
-      case 'resuelto':
-        return Colors.green.shade100;
-      default:
-        return Colors.grey.shade200;
-    }
   }
 }

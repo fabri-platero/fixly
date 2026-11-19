@@ -18,11 +18,33 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
   String _descripcion = '';
   String _direccion = '';
 
+  Reporte? _editando;
+  bool _iniciado = false;
+  bool _guardando = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_iniciado) return;
+    _iniciado = true;
+    final argumento = ModalRoute.of(context)!.settings.arguments;
+    if (argumento is Reporte) {
+      _editando = argumento;
+      _categoria = _categorias.firstWhere(
+        (categoria) => categoria.toLowerCase() == argumento.categoria,
+        orElse: () => _categorias.first,
+      );
+      _titulo = argumento.titulo;
+      _descripcion = argumento.descripcion;
+      _direccion = argumento.direccion;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nuevo reporte'),
+        title: Text(_editando == null ? 'Nuevo reporte' : 'Editar reporte'),
         centerTitle: true,
       ),
       body: GestureDetector(
@@ -73,11 +95,13 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
                 child: Text(categoria),
               );
             }).toList(),
-            onChanged: (valor) {
-              setState(() {
-                _categoria = valor!;
-              });
-            },
+            onChanged: _editando == null
+                ? (valor) {
+                    setState(() {
+                      _categoria = valor!;
+                    });
+                  }
+                : null,
           ),
         ),
       ],
@@ -85,7 +109,9 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
   }
 
   Widget _crearTitulo() {
-    return TextField(
+    return TextFormField(
+      initialValue: _titulo,
+      maxLength: 100,
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
@@ -102,8 +128,10 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
   }
 
   Widget _crearDescripcion() {
-    return TextField(
+    return TextFormField(
+      initialValue: _descripcion,
       maxLines: 4,
+      maxLength: 500,
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
@@ -119,7 +147,9 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
   }
 
   Widget _crearDireccion() {
-    return TextField(
+    return TextFormField(
+      initialValue: _direccion,
+      maxLength: 150,
       textCapitalization: TextCapitalization.words,
       decoration: InputDecoration(
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
@@ -185,10 +215,16 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _enviar,
-        child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 14),
-          child: Text('Enviar reporte'),
+        onPressed: _guardando ? null : _enviar,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: _guardando
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(_editando == null ? 'Enviar reporte' : 'Guardar cambios'),
         ),
       ),
     );
@@ -199,6 +235,13 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
       _mostrarAlerta('Faltan datos', 'Completá el título y la dirección.');
       return;
     }
+    setState(() {
+      _guardando = true;
+    });
+    if (_editando != null) {
+      await _guardarCambios(_editando!);
+      return;
+    }
     final reporte = Reporte(
       categoria: _categoria.toLowerCase(),
       titulo: _titulo.trim(),
@@ -207,16 +250,44 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
       uid: authProvider.usuario!.uid,
     );
     final error = await reportesProvider.agregar(reporte);
+    await _terminar(error);
+  }
+
+  Future<void> _terminar(String? error, [Reporte? resultado]) async {
     if (!mounted) return;
+    setState(() {
+      _guardando = false;
+    });
+    if (error == reportesProvider.mensajePendiente) {
+      await _mostrarAlerta('Conexión inestable', error!);
+      if (!mounted) return;
+      Navigator.pop(context, resultado);
+      return;
+    }
     if (error != null) {
       _mostrarAlerta('Error', error);
       return;
     }
-    Navigator.pop(context);
+    Navigator.pop(context, resultado);
   }
 
-  void _mostrarAlerta(String titulo, String mensaje) {
-    showDialog(
+  Future<void> _guardarCambios(Reporte original) async {
+    final actualizado = Reporte(
+      id: original.id,
+      categoria: original.categoria,
+      titulo: _titulo.trim(),
+      descripcion: _descripcion.trim(),
+      direccion: _direccion.trim(),
+      estado: original.estado,
+      uid: original.uid,
+      fecha: original.fecha,
+    );
+    final error = await reportesProvider.actualizar(actualizado);
+    await _terminar(error, actualizado);
+  }
+
+  Future<void> _mostrarAlerta(String titulo, String mensaje) async {
+    await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(

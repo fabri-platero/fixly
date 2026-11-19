@@ -1,7 +1,12 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:fixly/src/models/reporte_model.dart';
 import 'package:fixly/src/provider/auth_provider.dart';
 import 'package:fixly/src/provider/reportes_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class NuevoReportePage extends StatefulWidget {
   const NuevoReportePage({super.key});
@@ -17,6 +22,7 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
   String _titulo = '';
   String _descripcion = '';
   String _direccion = '';
+  Uint8List? _imagen;
 
   Reporte? _editando;
   bool _iniciado = false;
@@ -37,6 +43,9 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
       _titulo = argumento.titulo;
       _descripcion = argumento.descripcion;
       _direccion = argumento.direccion;
+      if (argumento.foto.isNotEmpty) {
+        _imagen = base64Decode(argumento.foto);
+      }
     }
   }
 
@@ -182,32 +191,106 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
         Container(
           width: double.infinity,
           height: 180,
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: Colors.grey.shade200,
             borderRadius: BorderRadius.circular(10.0),
             border: Border.all(color: Colors.grey.shade400),
           ),
-          child: const Center(
-            child: Icon(Icons.image, size: 60, color: Colors.grey),
-          ),
+          child: _imagen == null
+              ? const Center(
+                  child: Icon(Icons.image, size: 60, color: Colors.grey),
+                )
+              : Image.memory(_imagen!, fit: BoxFit.cover),
         ),
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             OutlinedButton.icon(
-              onPressed: () {},
+              onPressed: _tomarFoto,
               icon: const Icon(Icons.camera_alt),
               label: const Text('Cámara'),
             ),
             OutlinedButton.icon(
-              onPressed: () {},
+              onPressed: () => _cargarFoto(ImageSource.gallery),
               icon: const Icon(Icons.photo_library),
               label: const Text('Galería'),
             ),
           ],
         ),
+        if (_imagen != null)
+          TextButton.icon(
+            onPressed: () {
+              setState(() {
+                _imagen = null;
+              });
+            },
+            icon: const Icon(Icons.close),
+            label: const Text('Quitar foto'),
+          ),
       ],
+    );
+  }
+
+  Future<void> _tomarFoto() async {
+    final permiso = await Permission.camera.request();
+    if (!mounted) return;
+    if (permiso.isGranted) {
+      await _cargarFoto(ImageSource.camera);
+    } else if (permiso.isPermanentlyDenied) {
+      _mostrarPermisoBloqueado();
+    } else {
+      _mostrarAlerta(
+        'Permiso denegado',
+        'Necesitamos la cámara para sacar una foto del problema.',
+      );
+    }
+  }
+
+  Future<void> _cargarFoto(ImageSource origen) async {
+    final archivo = await ImagePicker().pickImage(
+      source: origen,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 50,
+    );
+    if (archivo == null) return;
+    final bytes = await archivo.readAsBytes();
+    if (!mounted) return;
+    if (bytes.length > 500000) {
+      _mostrarAlerta('Foto muy pesada', 'Elegí otra foto más liviana.');
+      return;
+    }
+    setState(() {
+      _imagen = bytes;
+    });
+  }
+
+  void _mostrarPermisoBloqueado() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Permiso bloqueado'),
+          content: const Text(
+            'Bloqueaste el permiso de cámara. Para usarla, activalo desde los ajustes de la app.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                openAppSettings();
+              },
+              child: const Text('Abrir ajustes'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -248,6 +331,7 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
       descripcion: _descripcion.trim(),
       direccion: _direccion.trim(),
       uid: authProvider.usuario!.uid,
+      foto: _imagen == null ? '' : base64Encode(_imagen!),
     );
     final error = await reportesProvider.agregar(reporte);
     await _terminar(error);
@@ -280,6 +364,7 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
       direccion: _direccion.trim(),
       estado: original.estado,
       uid: original.uid,
+      foto: _imagen == null ? '' : base64Encode(_imagen!),
       fecha: original.fecha,
     );
     final error = await reportesProvider.actualizar(actualizado);

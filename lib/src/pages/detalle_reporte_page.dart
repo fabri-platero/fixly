@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:fixly/src/models/reporte_model.dart';
 import 'package:fixly/src/provider/reportes_provider.dart';
 import 'package:fixly/src/utils/reporte_util.dart';
@@ -15,9 +17,7 @@ class _DetalleReportePageState extends State<DetalleReportePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_reporte == null) {
-      _reporte = ModalRoute.of(context)!.settings.arguments as Reporte;
-    }
+    _reporte ??= ModalRoute.of(context)!.settings.arguments as Reporte;
     final reporte = _reporte!;
     final editable = reporte.estado == 'pendiente';
 
@@ -50,6 +50,7 @@ class _DetalleReportePageState extends State<DetalleReportePage> {
               children: [
                 _crearEncabezado(reporte),
                 const SizedBox(height: 20),
+                if (reporte.foto.isNotEmpty) _crearFoto(reporte.foto),
                 _crearDato(
                   Icons.description,
                   'Descripción',
@@ -101,6 +102,21 @@ class _DetalleReportePageState extends State<DetalleReportePage> {
           backgroundColor: colorEstado(reporte.estado),
         ),
       ],
+    );
+  }
+
+  Widget _crearFoto(String foto) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10.0),
+        child: Image.memory(
+          base64Decode(foto),
+          width: double.infinity,
+          height: 220,
+          fit: BoxFit.cover,
+        ),
+      ),
     );
   }
 

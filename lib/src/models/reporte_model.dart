@@ -8,6 +8,7 @@ class Reporte {
   final String direccion;
   final String estado;
   final String uid;
+  final String foto;
   final DateTime? fecha;
 
   Reporte({
@@ -18,6 +19,7 @@ class Reporte {
     required this.direccion,
     this.estado = 'pendiente',
     required this.uid,
+    this.foto = '',
     this.fecha,
   });
 
@@ -31,6 +33,7 @@ class Reporte {
       direccion: data['direccion'] ?? '',
       estado: data['estado'] ?? 'pendiente',
       uid: data['uid'] ?? '',
+      foto: data['foto'] ?? '',
       fecha: timestamp?.toDate(),
     );
   }
@@ -43,6 +46,7 @@ class Reporte {
       'direccion': direccion,
       'estado': estado,
       'uid': uid,
+      'foto': foto,
       'fecha': FieldValue.serverTimestamp(),
     };
   }

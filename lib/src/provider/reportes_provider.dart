@@ -63,6 +63,7 @@ class _ReportesProvider {
             'titulo': reporte.titulo,
             'descripcion': reporte.descripcion,
             'direccion': reporte.direccion,
+            'foto': reporte.foto,
           })
           .timeout(_espera);
       return null;

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:fixly/src/models/reporte_model.dart';
+import 'package:fixly/src/provider/auth_provider.dart';
 import 'package:fixly/src/provider/reportes_provider.dart';
 import 'package:fixly/src/utils/reporte_util.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,9 @@ class _DetalleReportePageState extends State<DetalleReportePage> {
   Widget build(BuildContext context) {
     _reporte ??= ModalRoute.of(context)!.settings.arguments as Reporte;
     final reporte = _reporte!;
-    final editable = reporte.estado == 'pendiente';
+    final esPropio = reporte.uid == authProvider.usuario!.uid;
+    final pendiente = reporte.estado == 'pendiente';
+    final editable = esPropio && pendiente;
 
     return Scaffold(
       appBar: AppBar(
@@ -59,12 +62,18 @@ class _DetalleReportePageState extends State<DetalleReportePage> {
                       : reporte.descripcion,
                 ),
                 _crearDato(Icons.location_on, 'Dirección', reporte.direccion),
+                if (authProvider.esOperador)
+                  _crearDato(
+                    Icons.person,
+                    'Reportado por',
+                    reporte.email.isEmpty ? 'Desconocido' : reporte.email,
+                  ),
                 _crearDato(
                   Icons.calendar_today,
                   'Fecha',
                   formatearFecha(reporte.fecha),
                 ),
-                if (!editable) _crearAviso(),
+                if (esPropio && !pendiente) _crearAviso(reporte.estado),
               ],
             ),
           ),
@@ -129,11 +138,13 @@ class _DetalleReportePageState extends State<DetalleReportePage> {
     );
   }
 
-  Widget _crearAviso() {
+  Widget _crearAviso(String estado) {
     return Padding(
       padding: const EdgeInsets.only(top: 20),
       child: Text(
-        'Este reporte ya está siendo atendido y no se puede modificar.',
+        estado == 'resuelto'
+            ? 'Este reporte ya fue resuelto. ¡Gracias por avisar!'
+            : 'Este reporte ya está siendo atendido y no se puede modificar.',
         style: TextStyle(color: Colors.grey.shade600),
       ),
     );

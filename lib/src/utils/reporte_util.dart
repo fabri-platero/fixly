@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+const List<String> estados = ['pendiente', 'en proceso', 'resuelto'];
+
 IconData iconoCategoria(String categoria) {
   switch (categoria) {
     case 'bache':

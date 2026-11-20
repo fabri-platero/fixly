@@ -32,6 +32,15 @@ class _ReportesProvider {
   Future<List<Reporte>> cargarDatos() async {
     final uid = authProvider.usuario!.uid;
     final snapshot = await _coleccion.where('uid', isEqualTo: uid).get();
+    return _convertir(snapshot);
+  }
+
+  Future<List<Reporte>> cargarTodos() async {
+    final snapshot = await _coleccion.get();
+    return _convertir(snapshot);
+  }
+
+  List<Reporte> _convertir(QuerySnapshot<Map<String, dynamic>> snapshot) {
     final reportes = snapshot.docs
         .map((doc) => Reporte.fromMap(doc.id, doc.data()))
         .toList();
@@ -78,6 +87,18 @@ class _ReportesProvider {
     if (!await _hayConexion()) return mensajeSinConexion;
     try {
       await _coleccion.doc(id).delete().timeout(_espera);
+      return null;
+    } on TimeoutException {
+      return mensajePendiente;
+    } on FirebaseException catch (e) {
+      return _mensajeError(e.code);
+    }
+  }
+
+  Future<String?> cambiarEstado(String id, String estado) async {
+    if (!await _hayConexion()) return mensajeSinConexion;
+    try {
+      await _coleccion.doc(id).update({'estado': estado}).timeout(_espera);
       return null;
     } on TimeoutException {
       return mensajePendiente;

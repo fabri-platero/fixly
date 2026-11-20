@@ -1,9 +1,29 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class _AuthProvider {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  String _rol = 'ciudadano';
+
   User? get usuario => _auth.currentUser;
+
+  bool get esOperador => _rol == 'operador';
+
+  String get rutaInicio => esOperador ? 'panel' : 'home';
+
+  Future<void> cargarRol() async {
+    try {
+      final documento = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(usuario!.uid)
+          .get()
+          .timeout(const Duration(seconds: 5));
+      _rol = documento.data()?['rol'] ?? 'ciudadano';
+    } catch (e) {
+      _rol = 'ciudadano';
+    }
+  }
 
   Future<String?> ingresar(String email, String password) async {
     try {
@@ -27,6 +47,7 @@ class _AuthProvider {
   }
 
   Future<void> salir() async {
+    _rol = 'ciudadano';
     await _auth.signOut();
   }
 

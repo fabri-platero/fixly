@@ -10,7 +10,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Fixly',
-      initialRoute: authProvider.usuario == null ? '/' : 'home',
+      initialRoute: authProvider.usuario == null
+          ? '/'
+          : authProvider.rutaInicio,
       routes: getAplicationRoutes(),
     );
   }

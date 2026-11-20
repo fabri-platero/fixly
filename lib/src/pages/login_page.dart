@@ -134,7 +134,9 @@ class _LoginPageState extends State<LoginPage> {
       _mostrarAlerta('Error', error);
       return;
     }
-    Navigator.pushReplacementNamed(context, 'home');
+    await authProvider.cargarRol();
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, authProvider.rutaInicio);
   }
 
   void _mostrarAlerta(String titulo, String mensaje) {

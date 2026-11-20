@@ -331,6 +331,7 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
       descripcion: _descripcion.trim(),
       direccion: _direccion.trim(),
       uid: authProvider.usuario!.uid,
+      email: authProvider.usuario!.email ?? '',
       foto: _imagen == null ? '' : base64Encode(_imagen!),
     );
     final error = await reportesProvider.agregar(reporte);
@@ -364,6 +365,7 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
       direccion: _direccion.trim(),
       estado: original.estado,
       uid: original.uid,
+      email: original.email,
       foto: _imagen == null ? '' : base64Encode(_imagen!),
       fecha: original.fecha,
     );

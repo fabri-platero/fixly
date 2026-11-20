@@ -8,6 +8,7 @@ class Reporte {
   final String direccion;
   final String estado;
   final String uid;
+  final String email;
   final String foto;
   final DateTime? fecha;
 
@@ -19,6 +20,7 @@ class Reporte {
     required this.direccion,
     this.estado = 'pendiente',
     required this.uid,
+    this.email = '',
     this.foto = '',
     this.fecha,
   });
@@ -33,6 +35,7 @@ class Reporte {
       direccion: data['direccion'] ?? '',
       estado: data['estado'] ?? 'pendiente',
       uid: data['uid'] ?? '',
+      email: data['email'] ?? '',
       foto: data['foto'] ?? '',
       fecha: timestamp?.toDate(),
     );
@@ -46,6 +49,7 @@ class Reporte {
       'direccion': direccion,
       'estado': estado,
       'uid': uid,
+      'email': email,
       'foto': foto,
       'fecha': FieldValue.serverTimestamp(),
     };

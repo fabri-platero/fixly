@@ -89,7 +89,7 @@ class _HomePageState extends State<HomePage> {
           child: Icon(iconoCategoria(reporte.categoria), color: Colors.blue),
         ),
         title: Text(reporte.titulo),
-        subtitle: Text(reporte.direccion),
+        subtitle: Text(mostrarDireccion(reporte.direccion)),
         trailing: _crearEstado(reporte.estado),
         onTap: () {
           Navigator.pushNamed(context, 'detalle', arguments: reporte).then((_) {

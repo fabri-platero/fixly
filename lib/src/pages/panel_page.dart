@@ -90,7 +90,7 @@ class _PanelPageState extends State<PanelPage> {
         ),
         title: Text(reporte.titulo),
         subtitle: Text(
-          '${reporte.direccion}\n${formatearFecha(reporte.fecha)}',
+          '${mostrarDireccion(reporte.direccion)}\n${formatearFecha(reporte.fecha)}',
         ),
         isThreeLine: true,
         trailing: _crearSelectorEstado(reporte),

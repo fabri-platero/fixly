@@ -4,8 +4,12 @@ import 'dart:typed_data';
 import 'package:fixly/src/models/reporte_model.dart';
 import 'package:fixly/src/provider/auth_provider.dart';
 import 'package:fixly/src/provider/reportes_provider.dart';
+import 'package:fixly/src/utils/mapa_util.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class NuevoReportePage extends StatefulWidget {
@@ -33,6 +37,10 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
   String _descripcion = '';
   String _direccion = '';
   Uint8List? _imagen;
+  LatLng? _ubicacion;
+  bool _buscandoUbicacion = false;
+  final MapController _mapa = MapController();
+  final LatLng _centroSanJuan = const LatLng(-31.5375, -68.5257);
 
   Reporte? _editando;
   bool _iniciado = false;
@@ -55,6 +63,9 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
       _direccion = argumento.direccion;
       if (argumento.foto.isNotEmpty) {
         _imagen = base64Decode(argumento.foto);
+      }
+      if (argumento.latitud != null && argumento.longitud != null) {
+        _ubicacion = LatLng(argumento.latitud!, argumento.longitud!);
       }
     }
   }
@@ -86,6 +97,7 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
                   _crearDireccion(),
                   const SizedBox(height: 10),
                   _crearBotonUbicacion(),
+                  if (_ubicacion != null) _crearUbicacion(),
                   const SizedBox(height: 20),
                   _crearFoto(),
                   const SizedBox(height: 30),
@@ -172,8 +184,8 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
       textCapitalization: TextCapitalization.words,
       decoration: InputDecoration(
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
-        labelText: 'Dirección',
-        hintText: 'Ej: Av. Libertador 1200',
+        labelText: 'Dirección o referencia',
+        hintText: 'Ej: Av. Libertador 1200, frente a la plaza',
         prefixIcon: const Icon(Icons.location_on),
       ),
       onChanged: (valor) {
@@ -187,12 +199,112 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
   Widget _crearBotonUbicacion() {
     return Align(
       alignment: Alignment.centerLeft,
-      child: TextButton.icon(
-        onPressed: () {},
-        icon: const Icon(Icons.my_location),
-        label: const Text('Usar mi ubicación actual'),
+      child: Wrap(
+        children: [
+          TextButton.icon(
+            onPressed: _buscandoUbicacion ? null : _usarUbicacion,
+            icon: const Icon(Icons.my_location),
+            label: Text(
+              _buscandoUbicacion
+                  ? 'Buscando ubicación...'
+                  : 'Usar mi ubicación actual',
+            ),
+          ),
+          if (_ubicacion == null)
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  _ubicacion = _centroSanJuan;
+                });
+              },
+              icon: const Icon(Icons.map),
+              label: const Text('Elegir en el mapa'),
+            ),
+        ],
       ),
     );
+  }
+
+  Widget _crearUbicacion() {
+    return Column(
+      children: [
+        crearMapa(
+          _ubicacion!,
+          controlador: _mapa,
+          alTocar: (posicion, punto) {
+            setState(() {
+              _ubicacion = punto;
+            });
+          },
+        ),
+        const SizedBox(height: 5),
+        Text(
+          'Tocá el mapa para ajustar el punto exacto.',
+          style: TextStyle(color: Colors.grey.shade600),
+        ),
+        TextButton.icon(
+          onPressed: () {
+            setState(() {
+              _ubicacion = null;
+            });
+          },
+          icon: const Icon(Icons.close),
+          label: const Text('Quitar ubicación'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _usarUbicacion() async {
+    final gpsActivo = await Geolocator.isLocationServiceEnabled();
+    if (!mounted) return;
+    if (!gpsActivo) {
+      _mostrarAlerta(
+        'GPS apagado',
+        'Activá la ubicación del teléfono e intentá de nuevo.',
+      );
+      return;
+    }
+    final permiso = await Permission.location.request();
+    if (!mounted) return;
+    if (permiso.isPermanentlyDenied) {
+      _mostrarPermisoBloqueado('ubicación');
+      return;
+    }
+    if (!permiso.isGranted) {
+      _mostrarAlerta(
+        'Permiso denegado',
+        'Necesitamos tu ubicación para marcar dónde está el problema.',
+      );
+      return;
+    }
+    setState(() {
+      _buscandoUbicacion = true;
+    });
+    try {
+      final posicion = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+      if (!mounted) return;
+      final punto = LatLng(posicion.latitude, posicion.longitude);
+      if (_ubicacion != null) _mapa.move(punto, 17);
+      setState(() {
+        _ubicacion = punto;
+        _buscandoUbicacion = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _buscandoUbicacion = false;
+      });
+      _mostrarAlerta(
+        'Sin ubicación',
+        'No se pudo obtener tu ubicación. Probá de nuevo en un lugar abierto.',
+      );
+    }
   }
 
   Widget _crearFoto() {
@@ -249,7 +361,7 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
     if (permiso.isGranted) {
       await _cargarFoto(ImageSource.camera);
     } else if (permiso.isPermanentlyDenied) {
-      _mostrarPermisoBloqueado();
+      _mostrarPermisoBloqueado('cámara');
     } else {
       _mostrarAlerta(
         'Permiso denegado',
@@ -277,14 +389,14 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
     });
   }
 
-  void _mostrarPermisoBloqueado() {
+  void _mostrarPermisoBloqueado(String permiso) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Permiso bloqueado'),
-          content: const Text(
-            'Bloqueaste el permiso de cámara. Para usarla, activalo desde los ajustes de la app.',
+          content: Text(
+            'Bloqueaste el permiso de $permiso. Para usarlo, activalo desde los ajustes de la app.',
           ),
           actions: <Widget>[
             TextButton(
@@ -324,8 +436,15 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
   }
 
   Future<void> _enviar() async {
-    if (_titulo.trim().isEmpty || _direccion.trim().isEmpty) {
-      _mostrarAlerta('Faltan datos', 'Completá el título y la dirección.');
+    if (_titulo.trim().isEmpty) {
+      _mostrarAlerta('Faltan datos', 'Completá el título.');
+      return;
+    }
+    if (_direccion.trim().isEmpty && _ubicacion == null) {
+      _mostrarAlerta(
+        'Faltan datos',
+        'Escribí una dirección o marcá la ubicación en el mapa.',
+      );
       return;
     }
     setState(() {
@@ -343,6 +462,8 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
       uid: authProvider.usuario!.uid,
       email: authProvider.usuario!.email ?? '',
       foto: _imagen == null ? '' : base64Encode(_imagen!),
+      latitud: _ubicacion?.latitude,
+      longitud: _ubicacion?.longitude,
     );
     final error = await reportesProvider.agregar(reporte);
     await _terminar(error);
@@ -377,6 +498,8 @@ class _NuevoReportePageState extends State<NuevoReportePage> {
       uid: original.uid,
       email: original.email,
       foto: _imagen == null ? '' : base64Encode(_imagen!),
+      latitud: _ubicacion?.latitude,
+      longitud: _ubicacion?.longitude,
       fecha: original.fecha,
     );
     final error = await reportesProvider.actualizar(actualizado);

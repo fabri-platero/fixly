@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:fixly/src/models/reporte_model.dart';
 import 'package:fixly/src/provider/auth_provider.dart';
 import 'package:fixly/src/provider/reportes_provider.dart';
+import 'package:fixly/src/utils/mapa_util.dart';
 import 'package:fixly/src/utils/reporte_util.dart';
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 
 class DetalleReportePage extends StatefulWidget {
   const DetalleReportePage({super.key});
@@ -61,7 +63,15 @@ class _DetalleReportePageState extends State<DetalleReportePage> {
                       ? 'Sin descripción'
                       : reporte.descripcion,
                 ),
-                _crearDato(Icons.location_on, 'Dirección', reporte.direccion),
+                _crearDato(
+                  Icons.location_on,
+                  'Dirección',
+                  reporte.direccion.isEmpty
+                      ? 'Sin dirección'
+                      : reporte.direccion,
+                ),
+                if (reporte.latitud != null && reporte.longitud != null)
+                  _crearMapa(reporte),
                 if (authProvider.esOperador)
                   _crearDato(
                     Icons.person,
@@ -126,6 +136,13 @@ class _DetalleReportePageState extends State<DetalleReportePage> {
           fit: BoxFit.cover,
         ),
       ),
+    );
+  }
+
+  Widget _crearMapa(Reporte reporte) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: crearMapa(LatLng(reporte.latitud!, reporte.longitud!)),
     );
   }
 

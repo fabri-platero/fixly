@@ -38,6 +38,10 @@ Color colorEstado(String estado) {
   }
 }
 
+String mostrarDireccion(String direccion) {
+  return direccion.isEmpty ? 'Ubicación en el mapa' : direccion;
+}
+
 String capitalizar(String texto) {
   if (texto.isEmpty) return texto;
   return texto[0].toUpperCase() + texto.substring(1);

@@ -16,7 +16,17 @@ class NuevoReportePage extends StatefulWidget {
 }
 
 class _NuevoReportePageState extends State<NuevoReportePage> {
-  final List<String> _categorias = ['Bache', 'Luminaria', 'Basura'];
+  final List<String> _categorias = [
+    'Bache',
+    'Luminaria',
+    'Basura',
+    'Semáforo',
+    'Árbol caído',
+    'Pérdida de agua',
+    'Vereda rota',
+    'Señalización',
+    'Otro',
+  ];
 
   String _categoria = 'Bache';
   String _titulo = '';

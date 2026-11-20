@@ -10,6 +10,16 @@ IconData iconoCategoria(String categoria) {
       return Icons.lightbulb_outline;
     case 'basura':
       return Icons.delete_outline;
+    case 'semáforo':
+      return Icons.traffic;
+    case 'árbol caído':
+      return Icons.park;
+    case 'pérdida de agua':
+      return Icons.water_drop;
+    case 'vereda rota':
+      return Icons.directions_walk;
+    case 'señalización':
+      return Icons.signpost;
     default:
       return Icons.report_problem;
   }

@@ -10,6 +10,8 @@ class Reporte {
   final String uid;
   final String email;
   final String foto;
+  final double? latitud;
+  final double? longitud;
   final DateTime? fecha;
 
   Reporte({
@@ -22,6 +24,8 @@ class Reporte {
     required this.uid,
     this.email = '',
     this.foto = '',
+    this.latitud,
+    this.longitud,
     this.fecha,
   });
 
@@ -37,6 +41,8 @@ class Reporte {
       uid: data['uid'] ?? '',
       email: data['email'] ?? '',
       foto: data['foto'] ?? '',
+      latitud: (data['latitud'] as num?)?.toDouble(),
+      longitud: (data['longitud'] as num?)?.toDouble(),
       fecha: timestamp?.toDate(),
     );
   }
@@ -51,6 +57,8 @@ class Reporte {
       'uid': uid,
       'email': email,
       'foto': foto,
+      'latitud': latitud,
+      'longitud': longitud,
       'fecha': FieldValue.serverTimestamp(),
     };
   }

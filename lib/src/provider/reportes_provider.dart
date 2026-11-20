@@ -73,6 +73,8 @@ class _ReportesProvider {
             'descripcion': reporte.descripcion,
             'direccion': reporte.direccion,
             'foto': reporte.foto,
+            'latitud': reporte.latitud,
+            'longitud': reporte.longitud,
           })
           .timeout(_espera);
       return null;
